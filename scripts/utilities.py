@@ -8,8 +8,33 @@
 # logging_config.py
 import logging
 from pathlib import Path
+from datetime import datetime
 
-def setup_logging(log_file = 'data_driven_forecasting.log'):
+import yaml
+from pprint import pformat
+
+
+def read_settings(settings_yaml,log_settings = False):
+    """
+    Read the settings from the YAML file and return a dictionary of settings
+    """
+
+    # Read the settings from the YAML file
+    with open(settings_yaml) as file:
+        settings = yaml.load(file, Loader=yaml.FullLoader)
+
+    # Log the settings if required
+    if log_settings:
+        logging.info(f'Settings logged from {settings_yaml}')
+        settings_to_log = pformat(settings)
+        logging.debug(f'Settings: {settings_to_log}')
+
+    return settings
+
+def setup_logging(log_prefix = 'data_driven_forecasting_'):
+
+    # Get the current timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
     # Get the directory path of this file
     dir_path = Path(__file__).resolve().parent
@@ -21,7 +46,7 @@ def setup_logging(log_file = 'data_driven_forecasting.log'):
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # The full path to the log file
-    log_filename = Path(log_dir, log_file)
+    log_filename = Path(log_dir, f'{log_prefix}{timestamp}.log')
 
     # Get the root logger
     logger = logging.getLogger()
@@ -48,6 +73,6 @@ def setup_logging(log_file = 'data_driven_forecasting.log'):
         logger.addHandler(fh)
         logger.addHandler(ch)
 
-    logging.info('Logging setup complete. Log file: {}'.format(log_filename))
+    logging.info(f'Logging setup complete. Log file: {log_filename}')
 
 
