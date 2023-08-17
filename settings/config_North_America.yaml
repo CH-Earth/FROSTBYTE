@@ -1,0 +1,19 @@
+# Configuration file for SWE data driven seasonal data driven forecastings
+# Set required data paths - these are relative paths to where this script is stored
+
+# Domain, note that the name needs to match the data paths that follow
+domain: "North_America"
+
+#Observational data path
+streamflow_obs_path: "/Users/lla068/Documents/data_driven_forecasting/data/streamflow_obs/North_America/NorAmQobs_1979_2021.nc"
+precip_obs_path: "/Users/lla068/Documents/data_driven_forecasting/data/met_obs/North_America/SCDNA_v1.1.nc4"
+SWE_obs_path: "/Users/lla068/Documents/data_driven_forecasting/data/snow_obs/North_America/NorAmSnow_1979_2022.nc"
+volumes_obs_path: "/Users/lla068/Documents/data_driven_forecasting/scripts/HPC_workflow/output_data/North_America/v1/NorAmVol_1979_2021_nival_glacial_basins.nc"
+
+# GIS data paths
+basins_shp_path: "/Users/lla068/Documents/data_driven_forecasting/basins/North_America/NorAm_unregulated_basins.shp"
+nival_glacial_basins_shp_path: "/Users/lla068/Documents/data_driven_forecasting/scripts/HPC_workflow/output_data/North_America/v1/NorAm_nival_glacial_basins_outlines.shp"
+
+# Output data paths
+plots_path: "/Users/lla068/Documents/data_driven_forecasting/scripts/HPC_workflow/output_plots/North_America/v1/"
+output_data_path: "/Users/lla068/Documents/data_driven_forecasting/scripts/HPC_workflow/output_data/North_America/v1/"
