@@ -1,24 +1,24 @@
-# Data Driven Forecasting Workflow
+# FROST BYTE: Forecasting River Outlooks from Snow Timeseries: Building Yearly Targeted Ensembles
 
-A workflow for streamflow forecasting for rivers across North America, based on streamflow and snow water equivalent station observations.
+FROST BYTE is a reproducible data-driven workflow for probabilistic seasonal streamflow forecasting, based on streamflow and snow water equivalent station observations.
 
 ## Description
 
-This repository contains a reproducible data-driven workflow, applied to numerous basins, leveraging snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands from datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of streamflow volumes for 75 nival basins with minimal regulation from 1979 to 2021. This work focuses on a user-oriented hindcast evaluation and provides insights beneficial to snow surveyors, forecasters, workflow developers, and decision-makers.
+This repository contains a reproducible data-driven workflow, leveraging snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
 
 ## Repository Structure
 
-- 📂 `notebooks/`: Collection of Jupyter Notebooks detailing the forecasting workflow.
-- 📂 `scripts/`: Functions used in data processing and analysis
-- 📂 `settings/`: Settings for running the forecasting workflow
-- 📂 `test_cases/`: Sample data for running the forecasting workflow for a single basin
+- 📂 `notebooks/`: Collection of Jupyter Notebooks detailing each step of the forecasting workflow.
+- 📂 `scripts/`: Functions used in the data processing and analyses carried out in the Notebooks.
+- 📂 `settings/`: Settings for running the forecasting workflow.
+- 📂 `test_case_data/`: Sample data for running the forecasting workflow for two single river basins: the Bow River at Banff in Alberta, Canada, and the Crystal River Abv Avalanche Crk, Near Redstone in Colorado, USA.
 - 📄 `requirements.txt`: Lists the Python packages required for reproducing the workflow.
 
 ## Getting Started
 
 1. **Clone the Repository**  
    ```bash
-   git clone https://github.com/lou-a/data_driven_forecasting_workflow.git
+   git clone https://github.com/lou-a/FROST-BYTE.git
    ```
 
 2. **Set Up Virtual Environment (Optional)**  
@@ -53,7 +53,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) fi
 ## Citation
 
 If you use this workflow or any data therein, please consider citing our paper. The citation details can be found in the `CITATION.md` file.
-To be added ..
+To be added ...
 
 ## Contact
 
