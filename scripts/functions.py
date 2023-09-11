@@ -1,16 +1,14 @@
-###########################################################################################################
-# This Python script contains all the Python functions needed to run the data-driven forecasting workflow #
-# Note: The functions are ordered alphabetically and separated by ###                                     #
-###########################################################################################################
+############################################################################################################
+# This Python script contains all the Python functions needed to run the data-driven forecasting workflow. #
+# Note: The functions are ordered alphabetically and separated by ###                                      #
+############################################################################################################
 
 # Import required modules
 import datetime
 from datetime import timedelta, date
 import geopandas as gpd
-import itertools
 import math
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,12 +16,9 @@ import os
 import pandas as pd
 import properscoring as ps
 import random
-import rasterio
-from rasterio.plot import show
 from scipy import stats
 from scipy.interpolate import interp1d
 from scipy.stats import norm, circmean
-import seaborn as sns
 from shapely.geometry import Point
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
@@ -33,8 +28,6 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 import sys
-from textwrap import wrap
-import warnings
 import xarray as xr
 
 def artificial_gap_filling(original_data, iterations, artificial_gap_perc, window_days, min_obs_corr, min_obs_cdf, min_corr, min_obs_KGE, flag):
@@ -222,7 +215,7 @@ def artificial_gap_filling(original_data, iterations, artificial_gap_perc, windo
                     # otherwise proceed with evaluating the gap filling performance
                     else:
                         rmse = mean_squared_error(results['obs'], results['pre'], squared=False)
-                        kge_prime_prime = KGE_C2021(results['obs'].values, results['pre'].values, min_obs_KGE)
+                        kge_prime_prime = KGE_Tang2021(results['obs'].values, results['pre'].values, min_obs_KGE)
                         evaluation['RMSE'][mo-1,elem,i] = rmse
                         evaluation["KGE''"][mo-1,elem,i] = kge_prime_prime['KGE']
                         evaluation["KGE''_corr"][mo-1,elem,i] = kge_prime_prime['r']
@@ -239,85 +232,6 @@ def artificial_gap_filling(original_data, iterations, artificial_gap_perc, windo
 
     else:
         return evaluation
-
-###
-
-def basins_maps(basins, method, variable, nival_start_doy, nival_end_doy, domain):
-
-    """Plots two maps of basins provided, one that shows the basins' shapes & one that shows the basins' outlets.
-
-    Keyword arguments:
-    ------------------
-    - basins: Pandas GeoDataFrame of all basin shapefiles available to subset from
-    - method: String of the metric used to identify streamflow peaks (shown on maps' title)
-    - variable: String of the column label to be used for colouring the maps
-    - nival_start_doy: Integer day of year (doy) of the start of the nival period (default=pre-defined at the top of the Notebook)
-    - nival_end_doy: Integer day of year (doy) of the end of the nival period (default=pre-defined at the top of the Notebook)
-    - domain: String of the geographical domain to plot
-
-    Returns:
-    --------
-    - Two maps of basins.
-
-    """
-
-    # fig, axs = plt.subplots(2, 1, sharex=False, sharey=False, figsize=(20,10))
-
-    # # Plot map of basins' outlines
-    # world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-    # world_subdomain = world[world['name']==domain].copy()
-    # world_NA = world[world['continent']=='North America'].copy() # this will have to be modified, I can't get the world map plot to work so need to subselect continent to plot
-    # world_NA_albers = world_NA.to_crs("ESRI:102008")
-    # world_subdomain_albers = world_subdomain.to_crs("ESRI:102008")
-    # world_NA_albers.plot(ax=axs[0], linewidth=1, edgecolor='grey', color='white')
-    # basins_albers = basins.to_crs("ESRI:102008")
-    # basins_albers.sort_values(by=['Shp_Area'], ascending=False).plot(ax=axs[0], column=variable, cmap=plt.cm.viridis, vmin=nival_start_doy, vmax=nival_end_doy, legend=True, legend_kwds={'label':'DOY'})  # sorting the basins by area so that smaller basins aren't hidden under larger basins that encompass them
-    # minx, miny, maxx, maxy = np.nanmin(world_subdomain_albers.geometry.bounds.minx),np.nanmin(world_subdomain_albers.geometry.bounds.miny),np.nanmax(world_subdomain_albers.geometry.bounds.maxx),np.nanmax(world_subdomain_albers.geometry.bounds.maxy)
-    # axs[0].set_xlim(minx, maxx)
-    # axs[0].set_ylim(miny, maxy)
-    # axs[0].margins(0)
-    # axs[0].tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
-    # axs[0].title.set_text('Nival basins ('+method+')'+title_end)
-    # axs[0].text(minx+100,miny+100,'Total basins='+str(len(basins.index)))
-    # axs[0].set_facecolor('azure');
-
-    # # Plot map of basins' outlets
-    # basins_pt = basins.copy()
-    # basins_pt = gpd.GeoDataFrame(basins_pt, geometry=gpd.points_from_xy(basins_pt.outlet_lon, basins_pt.outlet_lat))
-    # basins_pt.crs = {"init":"epsg:4326"}
-    # basins_pt_albers = basins_pt.to_crs("ESRI:102008")
-    # world_NA_albers.plot(ax=axs[1], linewidth=1, edgecolor='grey', color='white')
-    # # sc = plt.scatter(basins_pt_albers.outlet_lon.values, basins_pt_albers.outlet_lat.values, c=basins_pt_albers[variable].values, cmap=plt.cm.viridis, vmin=nival_start_doy, vmax=nival_end_doy, alpha=.5)
-    # # plt.colorbar(sc, label='DOY')
-    # basins_pt_albers.plot(ax=axs[1], column=variable, cmap=plt.cm.viridis, vmin=nival_start_doy, vmax=nival_end_doy, legend=True, legend_kwds={'label':'DOY'}, alpha=.5, markersize=5)
-    # axs[1].set_xlim(minx-2, maxx+2)
-    # axs[1].set_ylim(miny-2, maxy+2)
-    # axs[1].margins(0)
-    # axs[1].tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
-    # axs[1].title.set_text('Nival basins outlets ('+method+')'+title_end)
-    # axs[1].text(minx+100,miny+100,'Total basins='+str(len(basins.index)))
-    # axs[1].set_facecolor('azure');
-
-    # Plot map of basins' outlets
-    fig, ax = plt.subplots()
-    world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-    continental_subdomain = world[world['continent']==domain]
-    continental_subdomain_albers = continental_subdomain.to_crs("ESRI:102008")
-    continental_subdomain_albers.plot(ax=ax, figsize=(20,5), linewidth=1, edgecolor='grey', color='white')
-    basins_albers = basins.to_crs("ESRI:102008")
-    basins_albers.plot(ax=ax, column=variable, cmap=plt.cm.viridis, vmin=nival_start_doy, vmax=nival_end_doy, legend=True, legend_kwds={'label':'Mean peak DOY'}, alpha=.5, markersize=5)
-    minx, miny, maxx, maxy = np.nanmin(continental_subdomain_albers.geometry.bounds.minx),np.nanmin(continental_subdomain_albers.geometry.bounds.miny),np.nanmax(continental_subdomain_albers.geometry.bounds.maxx),np.nanmax(continental_subdomain_albers.geometry.bounds.maxy)
-    plt.xlim(minx, maxx)
-    plt.ylim(miny, maxy)
-    plt.margins(0)
-    plt.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
-    title = ax.set_title("\n".join(wrap('Nival basins outlets ('+method+')', 50)))
-    plt.text(.01, .01, 'Total basins='+str(len(basins.index)), ha='left', va='bottom', transform=ax.transAxes)
-    ax.set_facecolor('azure')
-    plt.tight_layout()
-    title.set_y(1.05);
-
-    return fig
 
 ###
 
@@ -440,9 +354,9 @@ def continuous_rank_prob_score(Qobs, Qfc_ens, min_obs):
 
 def corr_coeff_squared(Qobs, Qfc_det, min_obs):
 
-    """Calculates the squared correlation coefficient between deterministic forecasts & observations.
+    """Calculates the squared Pearson correlation coefficient between deterministic forecasts & observations.
     Answers the question: How well did the forecast values correspond to the observed values?
-    Range: -1 to 1. Perfect score: 1. Units: Unitless.
+    Range: 0 to 1. Perfect score: 1. Units: Unitless.
     Characteristics: Good measure of linear association - visually, the correlation measures how close the points of a scatter plot are to a straight line. Does not take forecast bias into account. Sensitive to outliers.
 
     Keyword arguments:
@@ -478,101 +392,6 @@ def corr_coeff_squared(Qobs, Qfc_det, min_obs):
         r_squared = np.nan
 
     return r_squared
-
-###
-
-def cumulative_hydrographs(basins, streamflow_obs, month_start_water_year, day_start_water_year):
-
-    """Plots normalized cumulative climatological streamflows for the provided basins, differenciating between nival and glacial basins.
-
-    Keyword arguments:
-    ------------------
-    - basins: Pandas GeoDataFrame of all basins to plot
-    - streamflow_obs: xarray Dataset of streamflow observations
-    - month_start_water_year: Integer of the water year starting month
-    - day_start_water_year: Integer of the water year starting day of the month
-
-    Returns:
-    --------
-    - A plot of all basins' cumulative climatological hydrographs.
-
-    """
-
-    # Set up figure
-    fig = plt.figure()
-
-    # We expect to see RuntimeWarnings in this block due to missing values
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-
-        cumsum_norm_nivalbasins = np.ones((len(basins[basins.regime=='nival'].index),366))
-        cumsum_norm_glacialbasins = np.ones((len(basins[basins.regime=='glacial'].index),366))
-
-        nniv = -1
-        nglac = -1
-
-        # calculate the number of days between the water year and calendar start
-        start_water_year = date(2020,month_start_water_year,day_start_water_year)
-        start_calendar_year = date(2021,1,1)
-        delta = (start_calendar_year - start_water_year).days
-
-        # extract all stations for plotting
-        stations_to_plot = [x for x in basins.index.values]
-
-        # loop over the stations
-        for s in stations_to_plot:
-
-            # read streamflow observations for basin as xarray DataArray
-            streamflow_data_da = streamflow_obs.Flow.sel(Station_ID=s)
-
-            # calculate the climatological mean flow for each DOY
-            doy_mean = streamflow_data_da.groupby("time.dayofyear").mean(skipna=True)
-
-            # calculate water year doy to accumulate flow for the water year vs. calendar year
-            wateryear_doy = [(x+delta)%367 for x in np.arange(1,366+1)]
-            for i in range(len(wateryear_doy)):
-                if wateryear_doy[i] < delta:
-                    wateryear_doy[i] += 1
-            doy_mean = doy_mean.assign_coords(wateryear_doy=('dayofyear', wateryear_doy))
-            doy_mean = doy_mean.sortby('wateryear_doy')
-
-            # calculate the normalized cumulative sum over this climatological timeseries - we normalize so that all basins hydrographs can be plotted on a single plot
-            cumsum_norm = doy_mean.cumsum() / doy_mean.cumsum().values[-1]
-
-            # save the values to numpy array
-            if basins.loc[s].regime == 'nival':
-                nniv += 1
-                cumsum_norm_nivalbasins[nniv,:] = cumsum_norm
-
-            elif basins.loc[s].regime == 'glacial':
-                nglac += 1
-                cumsum_norm_glacialbasins[nglac,:] = cumsum_norm
-
-        # calculate values quantiles
-        niv_med = np.quantile(cumsum_norm_nivalbasins, [0,.25,.5,.75,1], axis=0)
-
-        # plotting
-        plt.plot(np.arange(366), niv_med[2,:], color='b', label='nival basins')
-        plt.fill_between(np.arange(366), niv_med[1,:], niv_med[3,:], color='b', alpha=.3, lw=0)
-        plt.fill_between(np.arange(366), niv_med[0,:], niv_med[4,:], color='b', alpha=.3, lw=0)
-
-        # check that there is data for glacial basins
-        if nglac > -1:
-
-            # calculate values quantiles
-            glac_med = np.quantile(cumsum_norm_glacialbasins, [0,.25,.5,.75,1], axis=0)
-
-            # plotting
-            plt.plot(np.arange(366), glac_med[2,:], color='darkturquoise', label='glacial basins')
-            plt.fill_between(np.arange(366), glac_med[1,:], glac_med[3,:], color='darkturquoise', alpha=.3, lw=0)
-            plt.fill_between(np.arange(366), glac_med[0,:], glac_med[4,:], color='darkturquoise', alpha=.3, lw=0)
-
-        plt.legend()
-        plt.title('')
-        plt.ylabel('cdf of normalized climatological Qmean')
-        plt.xticks(np.arange(0,360,30),['1st Oct', '1st Nov', '1st Dec', '1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun', '1st Jul', '1st Aug', '1st Sep'], rotation=45)
-
-    return fig;
 
 ###
 
@@ -768,53 +587,6 @@ def deterministic_forecasting(model, test_timeseries):
 
 ###
 
-def deterministic_forecast_plots(obs_timeseries, det_fc_timeseries, predictor_month, predictand_start_month, predictand_end_month, units):
-
-    """Plot deterministic forecasts.
-
-    Keyword arguments:
-    ------------------
-    - obs_timeseries: Pandas DataFrame of the observed flow accumulation data
-    - det_fc_timeseries: Pandas DataFrame of the deterministic forecasts of flow accumulation
-    - predictor_month: Integer of the month of predictor data to use
-    - predictand_start_month: Integer of the starting month of predictand data to use
-    - predictand_end_month: Integer of the end month of predictand data to use
-    - units: string of the flow units to use on the plot
-
-    Returns:
-    --------
-    - Timeseries and scatter plots of the flow accumulation deterministic forecasts and observations
-
-    """
-
-    # Select observed data that matches the forecast period
-    obs_data = obs_timeseries.loc[det_fc_timeseries.index]
-
-    # Initialize figure
-    fig = plt.figure(figsize=(20, 5))
-    layout = (1,3)
-    ts_ax = plt.subplot2grid(layout, (0,0), colspan=2)
-    scatter_ax = plt.subplot2grid(layout, (0,2))
-
-    # Timeseries plot of deterministic forecasts and observations
-    ts_ax.plot(obs_data.index, obs_data.values, color='red', label='observations', marker='o')
-    ts_ax.plot(det_fc_timeseries.index, det_fc_timeseries['Vol_fc_mean'].values, color='blue', label='deterministic forecasts', marker='o')
-    ts_ax.set_ylabel('Flow accumulation '+predictand_start_month+'-'+predictand_end_month+' ['+units+']')
-    ts_ax.set_xticks(obs_data.index)
-    ts_ax.legend()
-    ts_ax.set_title('Forecasts initialized on 1st '+predictor_month)
-
-    # Scatter plot of deterministic forecasts vs observations
-    scatter_ax.scatter(obs_data.values, det_fc_timeseries['Vol_fc_mean'].values, color='k')
-    min_value = min(obs_data.min(),det_fc_timeseries['Vol_fc_mean'].min())
-    max_value = max(obs_data.max(),det_fc_timeseries['Vol_fc_mean'].max())
-    scatter_ax.plot([min_value,max_value], [min_value,max_value], color='k', alpha=.3, ls='--')
-    scatter_ax.set_xlabel('Observations'+' ['+units+']')
-    scatter_ax.set_ylabel('Deterministic forecasts'+' ['+units+']')
-    scatter_ax.set_title('Forecasts initialized on 1st '+predictor_month);
-
-###
-
 def det_metrics_calculation(Qobs, Qfc_det, flag, niterations, min_obs):
 
     """Calculates deterministic metrics for whole hindcast timeseries (1 value per hindcast start date & target period).
@@ -882,7 +654,7 @@ def det_metrics_calculation(Qobs, Qfc_det, flag, niterations, min_obs):
                     # R2
                     rsquared_array[row,column] = round(corr_coeff_squared(Qobs_data.values, Qfc_det_data.values, min_obs),2)
                     # KGE" and its decomposition
-                    kge_decomposition = KGE_C2021(Qobs_data.values, Qfc_det_data.values, min_obs)
+                    kge_decomposition = KGE_Tang2021(Qobs_data.values, Qfc_det_data.values, min_obs)
                     kge_array[row,column] = round(kge_decomposition['KGE'],2)
                     kge_r_array[row,column] = round(kge_decomposition['r'],2)
                     kge_alpha_array[row,column] = round(kge_decomposition['alpha'],2)
@@ -902,7 +674,7 @@ def det_metrics_calculation(Qobs, Qfc_det, flag, niterations, min_obs):
                         # R2
                         rsquared_array[row,column,b] = round(corr_coeff_squared(Qobs_data_bs.values, Qfc_det_data_bs.values, min_obs),2)
                         # KGE" and its decomposition
-                        kge_decomposition = KGE_C2021(Qobs_data_bs.values, Qfc_det_data_bs.values, min_obs)
+                        kge_decomposition = KGE_Tang2021(Qobs_data_bs.values, Qfc_det_data_bs.values, min_obs)
                         kge_array[row,column,b] = round(kge_decomposition['KGE'],2)
                         kge_r_array[row,column,b] = round(kge_decomposition['r'],2)
                         kge_alpha_array[row,column,b] = round(kge_decomposition['alpha'],2)
@@ -926,13 +698,13 @@ def det_metrics_calculation(Qobs, Qfc_det, flag, niterations, min_obs):
 
     # Information for the output xarray DataArrays
     da_dict = {'R2':rsquared_da,'KGE"':kge_da,'KGE"_r':kge_r_da,'KGE"_alpha':kge_alpha_da,'KGE"_beta':kge_beta_da,'perc_diff':perc_diff_da}
-    metrics_longnames_dict = {'R2':'Squared correlation coefficient',
+    metrics_longnames_dict = {'R2':'Squared Pearson correlation coefficient',
                               'KGE"':'Modified Kling Gupta Efficiency',
                               'KGE"_r':'Correlation',
-                              'KGE"_alpha':'Variability',
-                              'KGE"_beta':'Bias',
+                              'KGE"_alpha':'Variability ratio',
+                              'KGE"_beta':'Bias ratio',
                               'perc_diff':'Percentage difference'}
-    metrics_info_dict = {'R2':'Measures the linear association between deterministic hindcasts (medians) & observations. Range: -1 to 1. Perfect score: 1. Units: Unitless.',
+    metrics_info_dict = {'R2':'Measures the linear association between deterministic hindcasts (medians) & observations. Range: 0 to 1. Perfect score: 1. Units: Unitless.',
                          'KGE"':'Combined measure of the correlation, bias & variability between deterministic hindcasts (medians) & observations. Range: -Inf to 1. Perfect score: 1. Units: Unitless.',
                          'KGE"_r':'Measures the correlation between deterministic hindcasts (medians) & observations. Perfect score: 1. Units: Unitless.',
                          'KGE"_alpha':'Measures the variability between deterministic hindcasts (medians) & observations. Perfect score: 1. Units: Unitless.',
@@ -1079,120 +851,6 @@ def ensemble_forecasting(predictor_data, predictand_data, PC_ids, ens_size, min_
 
 ###
 
-def ensemble_forecast_plots(obs_timeseries, ens_fc_timeseries, predictor_month, predictand_target_period, units):
-
-    """Plot ensemble forecasts timeseries as boxplots.
-
-    Keyword arguments:
-    ------------------
-    - obs_timeseries: Pandas DataFrame of the observed flow accumulation data
-    - ens_fc_timeseries: Pandas DataFrame of the ensemble forecasts of flow accumulation
-    - predictor_month: String of the month of predictor data to use
-    - predictand_target_period: String of the predictand target period to use
-    - units: string of the flow units to use on the plot
-
-    Returns:
-    --------
-    - Timeseries plot of the flow accumulation ensemble forecasts and observations
-
-    """
-
-    # Select observed data that matches the forecast period
-    ens_fc_timeseries = ens_fc_timeseries.dropna(dim='year')
-    obs_data = obs_timeseries.loc[ens_fc_timeseries.year]
-
-    # Initialize figure
-    fig = plt.figure(figsize=(20, 5))
-    ts_ax = plt.subplot()
-
-    # Timeseries plot of ensemble forecasts and observations
-    reddots, = ts_ax.plot(np.arange(1, len(obs_data)+1), obs_data.values, color='red', label='observations', marker='o')
-    bp = plt.boxplot(np.transpose(ens_fc_timeseries.values), patch_artist=True, zorder=1, whis=[0, 100], showfliers=False)
-    plt.setp(bp['boxes'], color='b', alpha=.5)
-    plt.setp(bp['whiskers'], color='b')
-    plt.setp(bp['medians'], color='k')
-    bluepatch = mpatches.Patch(color='b', alpha=.5, label='ensemble forecasts')
-    ts_ax.set_ylabel('Flow accumulation '+predictand_target_period+' ['+units+']')
-    ts_ax.set_xticks(np.arange(1, len(obs_data)+1))
-    ts_ax.set_xticklabels(obs_data.index.values)
-    plt.legend(handles=[reddots,bluepatch])
-    ts_ax.set_title('Forecasts initialized on 1st '+predictor_month)
-
-    return fig
-
-###
-
-def extract_monthly_data(stations_data, month, flag):
-
-    """For the PCA & forecasting, we need a full dataset (no missing data) for specific dates.
-    For our use, we extract data (with no missing values) for the first day of a given month.
-    We find the optimal number of stations and years of data we keep.
-
-    Keyword arguments:
-    ------------------
-    - stations_data: Pandas DataFrame containing the (gapfilled) SWE stations observations
-    - month: Integer between 1 and 12 to specify the month for which we want to extract data (1st day of the month extracted)
-    - flag: Integer to plot the evolution of the selection criteria (1) or not (0)
-
-    Returns:
-    --------
-    - month_stations_final: Pandas DataFrame containing the SWE stations observations to keep
-    - optional plot of the evolution of the # of stations & years we can keep
-
-    """
-
-    # Select all stations data for 1st of the month
-    month_stations_data = stations_data[(stations_data.index.month == month) & (stations_data.index.day == 1)]
-
-    # Create empty lists to store the # of stations and the # of years with data
-    no_stations = []
-    no_dates = []
-
-    # Increase step by step the minimum # of (non-missing) values we need to keep a station
-    for t in range(len(month_stations_data.index)+1):
-
-        # drop stations that do not meet this minimum threshold of values
-        month_stations_test = month_stations_data.dropna(axis=1, thresh=t)
-
-        # drop years with any missing values across remaining stations
-        month_stations_test = month_stations_test.dropna(axis=0, how='any')
-
-        # calculate and save the # of stations and years with data remaining
-        if len(month_stations_test.count(axis=1)) == 0 or len(month_stations_test.count(axis=0)) == 0:
-            no_stations.append(0)
-            no_dates.append(0)
-        else:
-            no_stations.append(month_stations_test.count(axis=1)[0])
-            no_dates.append(month_stations_test.count(axis=0)[0])
-
-    # multiply the # of stations remaining by the # of years remaining to find the optimal combination
-    products = []
-    for num1, num2 in zip(no_stations, no_dates):
-        products.append(num1 * num2)
-
-    # the optimal threshold is the threshold corresponding to the 1st occurence of max. stations x years available
-    thresh_optimal = products.index(max(products))
-
-    # select data for the optimal # stations & years combination
-    month_stations_final = month_stations_data.dropna(axis=1, thresh=thresh_optimal)
-    month_stations_final = month_stations_final.dropna(axis=0, how='any')
-
-    # plot the evolution of the # of stations & years of data
-    if flag == 1:
-        fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
-        ax1.plot(np.arange(len(no_stations)), no_stations, marker='o', color='b')
-        ax2.plot(np.arange(len(no_dates)), no_dates, marker='o', color='r')
-        ax1.plot([thresh_optimal]*2, [0,max(no_stations)], color='grey', ls='--', label='optimal')
-        ax2.plot([thresh_optimal]*2, [0,max(no_dates)], color='grey', ls='--', label='optimal')
-        plt.xlabel('min. # of values per station requires')
-        ax1.set_ylabel('# stations left')
-        ax2.set_ylabel('# years left')
-        plt.legend();
-
-    return month_stations_final
-
-###
-
 def extract_stations_in_basin(stations, basins, basin_id, buffer_km=0):
 
     """Extracts stations within a specified basin (with or without a buffer) and returns the extracted stations.
@@ -1237,109 +895,16 @@ def extract_stations_in_basin(stations, basins, basin_id, buffer_km=0):
 
 ###
 
-def hydrographs(streamflow_obs, month_start_water_year, day_start_water_year):
-
-    """Plots normalized climatological streamflows for the provided basins, differenciating between nival and glacial basins.
-
-    Keyword arguments:
-    ------------------
-    - streamflow_obs: xarray Dataset of streamflow observations
-    - month_start_water_year: Integer of the water year starting month
-    - day_start_water_year: Integer of the water year starting day of the month
-
-    Returns:
-    --------
-    - A plot of all basins' climatological hydrographs.
-
-    """
-    # Set up figure
-    fig = plt.figure(figsize=(5,4))
-
-    # We expect to see RuntimeWarnings in this block due to missing values
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-
-        # calculate the number of days between the water year and calendar start
-        start_water_year = date(2020,month_start_water_year,day_start_water_year)
-        start_calendar_year = date(2021,1,1)
-        delta = (start_calendar_year - start_water_year).days
-
-        # extract all stations for plotting
-        stations_to_plot = [x for x in streamflow_obs.Station_ID.values]
-
-        # set empty array to save values for plotting if there are more than 1 station to plot
-        if len(stations_to_plot) > 1:
-            norm_basins = np.ones((len(stations_to_plot),366))
-
-        # set counter
-        n = -1
-
-        # loop over the stations
-        for s in stations_to_plot:
-
-            n += 1
-
-            # read streamflow observations for basin as xarray DataArray
-            if len(stations_to_plot) == 1:
-                streamflow_data_da = streamflow_obs.Flow
-            else:
-                streamflow_data_da = streamflow_obs.sel(Station_ID=s).Flow
-
-            # calculate the climatological mean flow for each DOY
-            doy_mean = streamflow_data_da.groupby("time.dayofyear").mean(skipna=True)
-
-            # calculate water year doy to accumulate flow for the water year vs. calendar year
-            wateryear_doy = [(x+delta)%367 for x in np.arange(1,366+1)]
-            for i in range(len(wateryear_doy)):
-                if wateryear_doy[i] < delta:
-                    wateryear_doy[i] += 1
-            doy_mean = doy_mean.assign_coords(wateryear_doy=('dayofyear', wateryear_doy))
-            doy_mean = doy_mean.sortby('wateryear_doy')
-
-            # calculate the normalized sum over this climatological timeseries - we normalize so that all basins hydrographs can be plotted on a single plot
-            norm = doy_mean / doy_mean.cumsum().values[-1]
-
-            if len(stations_to_plot) > 1:
-                # save the values to numpy array
-                norm_basins[n,:] = norm
-
-        # if there is only 1 station to plot
-        if len(stations_to_plot) == 1:
-            # plotting
-            plt.plot(np.arange(366), norm, color='b')
-
-        # if there are more than 1 station to plot
-        elif len(stations_to_plot) > 1:
-            # calculate values quantiles
-            # Note: we start at .1 and end at .9 to remove noise with extremes
-            quant = np.quantile(norm_basins, [.1,.25,.5,.75,.9], axis=0)
-            # plotting
-            plt.plot(np.arange(366), quant[2,:], color='b', label='median')
-            plt.fill_between(np.arange(366), quant[1,:], quant[3,:], color='b', alpha=.5, lw=0, label='25th to 75th perc. range')
-            plt.fill_between(np.arange(366), quant[0,:], quant[1,:], color='b', alpha=.3, lw=0, label='10th to 90th perc. range')
-            plt.fill_between(np.arange(366), quant[3,:], quant[4,:], color='b', alpha=.3)
-            plt.legend()
-
-        # add plot elements
-        plt.title('')
-        plt.ylabel('normalized climatological Qmean')
-        plt.xticks(np.arange(0,360,30),['1st Oct', '1st Nov', '1st Dec', '1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun', '1st Jul', '1st Aug', '1st Sep'], rotation=45)
-        plt.tight_layout()
-
-    return fig;
-
-###
-
-def KGE_C2021(obs, pre, min_obs_KGE):
+def KGE_Tang2021(obs, pre, min_obs_KGE):
 
     """Calculates the modified Kling-Gupta Efficiency (KGE") and its 3 components.
     The KGE measures the correlation, bias and variability of the simulated values against the observed values.
-    KGE" was proposed by Clark et al. (2021) to solve issues arising with 0 values in the KGE or KGE'.
-    For more info, see Clark et al. (2021): https://doi.org/10.1029/2020WR029001
+    KGE" was proposed by Tang et al. (2021) to solve issues arising with 0 values in the KGE or KGE'.
+    For more info, see https://doi.org/10.1175/jcli-d-21-0067.1
     KGE" range: -Inf to 1. Perfect score: 1. Units: Unitless.
     Correlation (r): Perfect score is 1.
-    Bias (beta): Perfect score is 0.
-    Variability (alpha):  Perfect score is 1.
+    Bias ratio (beta): Perfect score is 0.
+    Variability ratio (alpha):  Perfect score is 1.
 
     Keyword arguments:
     ------------------
@@ -1430,152 +995,6 @@ def leave_out(original_timeseries, nyears_leaveout):
         train_dict[k] = original_timeseries.iloc[train_samples]
 
     return train_dict, test_dict
-
-###
-
-def maps_loadings(dem_dir, basin_id, basin, SWE_stations, loadings, PC):
-
-    """Creating maps of loadings between basin SWE stations and a given PC for each 1st of the month to see correlations in time & space.
-
-    Keyword arguments:
-    ------------------
-    - dem_dir: String of the path to DEMs
-    - basin_id: String of the basin id to plot
-    - basin: Pandas GeoDataFrame of basin to plot
-    - SWE_stations: Pandas GeoDataFrame of SWE stations to plot
-    - loadings: Dictionary of the PCA loadings (correlation between PCs & stations data)
-    - PC: String of the PC to create the maps for (e.g., 'PC1')
-
-    Returns:
-    --------
-    - Maps of loadings between basin SWE stations and a given PC for each 1st of the month
-
-    """
-
-    # Initialize figure
-    fig, ax = plt.subplots(4,3, figsize=[10,30])
-    plot_col = -1
-    row = 0
-
-    # Load DEM
-    src = rasterio.open(dem_dir + basin_id[:2] + ".tif")
-
-    # Loop over months
-    for m in range(1,12+1):
-
-        # controls for plotting on right subplot
-        plot_col += 1
-        if plot_col == 3:
-            row += 1
-            plot_col = 0
-
-        # month name to string
-        month_name = datetime.datetime.strptime(str(m), "%m").strftime("%b")
-
-        # add basin contour & elevation shading to map
-        basin.plot(ax=ax[row,plot_col], edgecolor='k', facecolor='none', lw=.5)
-        rasterio.plot.show((src, 1), cmap='Greys', vmin=0, ax=ax[row,plot_col], alpha=.7)
-
-        # remove frame ticks
-        ax[row,plot_col].set_xticks([])
-        ax[row,plot_col].set_yticks([])
-
-        # calculate map bounds
-        minx, miny, maxx, maxy = basin.geometry.total_bounds
-        ax[row,plot_col].set_xlim(minx - .1, maxx + .1)
-        ax[row,plot_col].set_ylim(miny - .1, maxy + .1)
-
-        # add labels
-        ax[row,plot_col].set_title('1st '+month_name)
-
-        # check if there is data for this month:
-        if m in loadings:
-
-            # extract geospatial information for stations to plot
-            SWE_stations_extract = SWE_stations[SWE_stations.station_id.isin(loadings[m].columns)]
-            SWE_stations_extract = SWE_stations_extract.set_index('station_id')
-
-            # extract & plot data for PC if available
-            if PC in loadings[m].index:
-                data_for_map = SWE_stations_extract.merge(loadings[m].loc[PC], left_index=True, right_index=True, how='outer')
-                sc = ax[row,plot_col].scatter(data_for_map.lon.values, data_for_map.lat.values, c=data_for_map[PC].values, cmap='rocket_r', vmin=0, vmax=1)
-
-    # Adjust subplots & add colorbar
-    plt.tight_layout()
-    fig.subplots_adjust(hspace=-.85)
-    cbar_ax = fig.add_axes([1.01,.31,.01,.072])
-    cbar = fig.colorbar(sc, cax=cbar_ax)
-    cbar.set_label('R$^2$')
-
-    return fig
-
-###
-
-def metrics_bootstrap_plots(metric_values, min_value, max_value, flag_skill, flag_events):
-
-    """Plots metrics median values with confidence intervals from bootstrapping.
-
-    Keyword arguments:
-    ------------------
-    - metric_values: xarray DataArray containing verification metric values for various target periods and forecast start dates.
-    - min_value: Minimum value of that verification metric
-    - max_value: Maximum value of that verification metric
-    - flag_skill: Integer to indicate whether to plot a 0 value threshold line (1) or not (0)
-    - flag_events: Integer to indicate whether to plot 1 score (0) or 2 scores/events to compare (1)
-
-    Returns:
-    --------
-    - Sub-plots of the evolution of the verification metric values per start date for each target period.
-
-    """
-
-    # Initialize figure
-    nrows = int(len(metric_values.target_period)/3+len(metric_values.target_period)%3)
-    fig, ax = plt.subplots(3,nrows, figsize=[10,10])
-
-    # Initialize counter to create subplots in the right place
-    elem = -1
-
-    # Loop over forecast target periods
-    for t in metric_values.target_period.values:
-
-        # increment counter
-        elem += 1
-
-        # plot metric median values and bootstrapping confidence intervals
-        if flag_events == 1:
-            ax[int(np.floor(elem/3)),elem%3].plot(np.arange(1,len(metric_values.init_month)+1), metric_values.sel(target_period=t).isel(event=0).median(dim='iteration'), color='orange', marker='o', label='median ($\leq$'+str(int(metric_values.event[0]*100))+'th perc.)')
-            ax[int(np.floor(elem/3)),elem%3].plot(np.arange(1,len(metric_values.init_month)+1), metric_values.sel(target_period=t).isel(event=1).median(dim='iteration'), color='b', marker='o', label='median ($\geq$'+str(int(metric_values.event[1]*100))+'th perc.)')
-            ax[int(np.floor(elem/3)),elem%3].fill_between(np.arange(1,len(metric_values.init_month)+1), metric_values.sel(target_period=t).isel(event=0).min(dim='iteration'), metric_values.sel(target_period=t).isel(event=0).max(dim='iteration'), color='orange', alpha=.1, label='conf. int. ($\leq$'+str(int(metric_values.event[0]*100))+'th perc.)')
-            ax[int(np.floor(elem/3)),elem%3].fill_between(np.arange(1,len(metric_values.init_month)+1), metric_values.sel(target_period=t).isel(event=1).min(dim='iteration'), metric_values.sel(target_period=t).isel(event=1).max(dim='iteration'), color='b', alpha=.1, label='conf. int. ($\geq$'+str(int(metric_values.event[1]*100))+'th perc.)')
-        else:
-            ax[int(np.floor(elem/3)),elem%3].plot(np.arange(1,len(metric_values.init_month)+1), metric_values.sel(target_period=t).median(dim='iteration'), color='b', marker='o', label='median')
-            ax[int(np.floor(elem/3)),elem%3].fill_between(np.arange(1,len(metric_values.init_month)+1), metric_values.sel(target_period=t).min(dim='iteration'), metric_values.sel(target_period=t).max(dim='iteration'), color='grey', alpha=.1, label='conf. int.')
-
-        # plot threshold line
-        if flag_skill == 1:
-            ax[int(np.floor(elem/3)),elem%3].plot(np.arange(1-.5,len(metric_values.init_month)+1+.5), [0]*(len(metric_values.init_month)+1), color='grey', ls='--', lw=.5)
-
-        # Add labels & legend
-        ax[int(np.floor(elem/3)),elem%3].set_xticks(metric_values.init_month)
-        ax[int(np.floor(elem/3)),elem%3].set_xlim(1-.5,len(metric_values.init_month)+.5)
-        ax[int(np.floor(elem/3)),elem%3].set_ylim(min_value, max_value)
-        ax[int(np.floor(elem/3)),elem%3].set_title(t)
-        if int(np.floor(elem/3)) == nrows-1:
-            ax[int(np.floor(elem/3)),elem%3].set_xticklabels([datetime.datetime.strptime(str(x), "%m").strftime("%b") for x in metric_values.init_month.values], rotation=90)
-            ax[int(np.floor(elem/3)),elem%3].set_xlabel('Hindcast start dates (1st)')
-            if elem%3 == 0:
-                ax[int(np.floor(elem/3)),elem%3].legend()
-                if metric_values.name == 'R2':
-                    ax[int(np.floor(elem/3)),elem%3].set_ylabel('R$^2$')
-                elif metric_values.name == 'ROC_AUC':
-                    ax[int(np.floor(elem/3)),elem%3].set_ylabel('ROC AUC')
-                else:
-                    ax[int(np.floor(elem/3)),elem%3].set_ylabel(metric_values.name)
-        else:
-            ax[int(np.floor(elem/3)),elem%3].set_xticklabels([])
-        if elem%3 != 0:
-            ax[int(np.floor(elem/3)),elem%3].set_yticklabels([]);
 
 ###
 
@@ -1776,89 +1195,6 @@ def polar_plot(theta_rad, regularity, flag, nival_start_doy, nival_end_doy, niva
     plt.tight_layout()
 
     return fig
-
-###
-
-def predictor_predictand_corr_plot(predictor_data, predictand_data, PC_id, start_months, end_month, min_obs_corr):
-
-    """Calculates and plots correlations between a SWE PC (predictor) & flow volumes (predictand) for different lead times and for different volume accumulation periods.
-
-    Keyword arguments:
-    ------------------
-    - predictor_data: Pandas DataFrame of the predictor (SWE PC) data
-    - predictand_data: Pandas DataFrame of the predictand (flow columes) data
-    - PC_id: String of the PC to use for the predictor data
-    - start_months: List of integers of the starting months of volume accumulation periods (predictand)
-    - end_month: Integer of the end month of volume accumulation periods (predictand)
-    - min_obs_corr: Positive integer defining the minimum number of observations required to calculate the correlation between predictand-predictor
-
-    Returns:
-    --------
-    - correlations: Pandas DataFrame of the correlations between predictors and predictands
-    - A matrix plot of the correlations between predictors and predictands
-
-    """
-
-    # Initialize the figure
-    fig = plt.figure()
-
-    # Initialize empty Numpy array to store correlations between predictors & predictands
-    corr_array = np.ones((len(start_months),len(start_months))) * np.nan
-
-    # Initialize predictand and predictor indices for saving the correlations & plotting
-    predictand_idx = []
-    predictor_idx = []
-
-    # Set the name of the end month of the predictand's accumulation periods - e.g., 'Sep' for month 9
-    predictand_end_month_name = datetime.datetime.strptime(str(end_month), "%m").strftime("%b")
-
-    # Initialize counter for saving & plotting data
-    elem_row = -1
-
-    # Loop over predictor dates
-    for predictor_month in start_months:
-
-        # update counters for saving & plotting data
-        elem_row += 1
-        elem_col = elem_row - 1
-
-        # save the predictor indices to empty list
-        predictor_month_name = datetime.datetime.strptime(str(predictor_month), "%m").strftime("%b")
-        predictor_idx.append(predictor_month_name)
-
-        # loop over predictand accumulation periods start dates
-        for predictand_start_month in range(predictor_month, end_month+1):
-
-            # update counters for saving & plotting data
-            elem_col += 1
-
-            # set the name of the starting month of the predictand's accumulation periods - e.g., 'Sep' for month 9
-            predictand_start_month_name = datetime.datetime.strptime(str(predictand_start_month), "%m").strftime("%b")
-
-            # save the predictand label to empty list
-            if elem_row == 0:
-                predictand_idx.append(predictand_start_month_name+'-'+predictand_end_month_name)
-
-            # get predictor & predictand series for overlapping time period
-            SWE_data = predictor_data[(predictor_data.index.month == predictor_month) & (predictor_data.index.day == 1)][PC_id]
-            SWE_data = SWE_data.dropna()
-            new_index = SWE_data.index.year
-            SWE_data = pd.Series(SWE_data.values, name='SWE', index=pd.Index(new_index, name='year'))
-            flow_data = predictand_data['Vol_'+predictand_start_month_name+'-'+predictand_end_month_name].rename('Qobs')
-
-            # calculate correlations between predictor & predictand and save results to Numpy array
-            corr_value = round(SWE_data.corr(flow_data, method='pearson', min_periods=min_obs_corr)**2,2)
-            corr_array[elem_row, elem_col] = corr_value
-
-    # Save correlations Numpy array as Pandas DataFrame
-    correlations = pd.DataFrame(data=corr_array, index=predictor_idx, columns=predictand_idx)
-
-    # Plot matrix of correlations
-    cmap = sns.cm.rocket_r
-    ax = sns.heatmap(correlations, annot=True, cmap=cmap, cbar_kws={'label': 'R$^2$'}, vmin=0, vmax=1)
-    ax.set(xlabel="Flow accumulation periods", ylabel = "SWE dates (1st)")
-
-    return correlations, fig
 
 ###
 
@@ -2524,83 +1860,6 @@ def ROC(Qobs, Qfc_ens, percentile, sign, min_obs, bins_thresholds):
 
 ###
 
-def ROC_plots(metric_values, percentile):
-
-    """Plots ROC curves for a given event (i.e., percentile).
-
-    Keyword arguments:
-    ------------------
-    - metric_values: xarray DataArray containing verification metric values for various target periods and forecast start dates.
-    - percentile: Float between 0 and 1 to indicate the percentile of the event for which calculations are made (e.g., 0.5 will mean that we look at flows either below or above the median of all observations).
-
-    Returns:
-    --------
-    - Sub-plots of the ROC curves for each target period (start dates are represented on the same sub-plot for the same target period).
-
-    """
-
-    # Initialize figure
-    nrows = int(len(metric_values.target_period)/3+len(metric_values.target_period)%3)
-    fig, ax = plt.subplots(3,nrows, figsize=[10,10])
-
-    # Initialize counter to create subplots in the right place
-    elem = -1
-
-    # Set color depending on the event
-    if percentile < 0.5:
-        color='orange'
-    else:
-        color='b'
-
-    # Loop over forecast target periods
-    for t in metric_values.target_period.values:
-
-        # increment counter
-        elem += 1
-
-        # loop over forecast start dates to plot ROC curves
-        for i in metric_values.init_month.values:
-            ax[int(np.floor(elem/3)),elem%3].plot(metric_values.sel(target_period=t, init_month=i, event=percentile, rate='FAR'), metric_values.sel(target_period=t, init_month=i, event=percentile, rate='HR'), color=color, marker='o')
-
-        # plot no skill line
-        ax[int(np.floor(elem/3)),elem%3].plot([0,1], [0,1], color='grey', ls='--', lw=.5)
-
-        # Add labels & legend
-        ax[int(np.floor(elem/3)),elem%3].set_title(t)
-        if int(np.floor(elem/3)) == nrows-1:
-            ax[int(np.floor(elem/3)),elem%3].set_xlabel('False Alarm Rate')
-            if elem%3 == 0:
-                ax[int(np.floor(elem/3)),elem%3].set_ylabel('Hit Rate')
-        else:
-            ax[int(np.floor(elem/3)),elem%3].set_xticklabels([])
-        if elem%3 != 0:
-            ax[int(np.floor(elem/3)),elem%3].set_yticklabels([]);
-
-###
-
-def split_sample(original_timeseries):
-
-    """Splits predictor & predictand timeseries data in half for split sample testing (training & testing the forecast model).
-
-    Keyword arguments:
-    ------------------
-    - original_timeseries: Pandas DataFrame of the combined predictor & predictand timeseries
-
-    Returns:
-    --------
-    - train_timeseries: Pandas DataFrame containing the 1st half of the timeseries used for training the forecast model
-    - test_timeseries: andas DataFrame containing the 2nd half of the timeseries used for testing the forecast model
-
-    """
-
-    split_point = int(len(original_timeseries.index)/2)
-    train_timeseries = original_timeseries[0:split_point]
-    test_timeseries = original_timeseries[split_point:]
-
-    return train_timeseries, test_timeseries
-
-###
-
 def stations_basin_map(basins, basin_id, SWE_stations, P_stations, flag, buffer_km=0):
 
     """Plots map of SWE and P stations in and around the basin.
@@ -2649,8 +1908,6 @@ def stations_basin_map(basins, basin_id, SWE_stations, P_stations, flag, buffer_
         basin_buffer.plot(ax=ax, alpha=.5)
 
     # Plot the basin and SWE stations
-    # src = rasterio.open(dem_dir + basin_id[:2] + ".tif")
-    # rasterio.plot.show((src, 1), cmap='Greys', vmin=0, ax=ax, alpha=.7)
     basins.loc[basins.Station_ID == basin_id].plot(ax=ax, alpha=.3)
     SWE_stations.plot(ax=ax, marker='o', color='b', markersize=10, alpha=.8, label='SWE stations')
     P_stations.plot(ax=ax, marker='o', color='g', markersize=10, alpha=.8, label='P stations')
