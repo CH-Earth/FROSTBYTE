@@ -2,9 +2,13 @@
 
 FROST BYTE is a reproducible data-driven workflow for probabilistic seasonal streamflow forecasting, based on streamflow and snow water equivalent station observations.
 
+<p align="center">
+<img src="FROST BYTE logo.png" alt="FROST BYTE logo" width="200"/>
+</p>
+
 ## Description
 
-This repository contains a reproducible data-driven workflow, leveraging snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
+This repository contains a reproducible data-driven workflow, organized as a collection of Jupyter Notebooks. The workflow leverages snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
 
 ## Repository Structure
 
@@ -57,4 +61,4 @@ To be added ...
 
 ## Contact
 
-For any inquiries or feedback, please open an issue or contact the maintainers via email.
+If you have any questions about using or running the workflow, or are willing to contribute, please contact louise.arnal[-at-]usask.ca
