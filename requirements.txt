@@ -1,0 +1,13 @@
+ipykernel
+matplotlib
+xarray
+pyyaml
+geopandas
+properscoring
+statsmodels
+sklearn
+scikit-learn
+netcdf4
+h5netcdf
+bottleneck
+rasterio

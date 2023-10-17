@@ -1591,7 +1591,10 @@ def quantile_mapping(data_donor, data_target, value_donor, min_obs_cdf, flag):
     if (len(sorted_data_donor) >= min_obs_cdf) & (len(sorted_data_target) >= min_obs_cdf):
 
         # Calculate the cumulative probability corresponding to the donor value
-        rank_donor_obs = sorted_data_donor[sorted_data_donor == value_donor].index[0]
+        #Update to line made due to pandas error
+        #TypeError: Addition/subtraction of integers and integer-arrays with Timestamp is no longer supported.  Instead of adding/subtracting `n`, use `n * obj.freq`
+        rank_donor_obs = sorted_data_donor.index.get_loc(sorted_data_donor[sorted_data_donor == value_donor].index[0])
+        #rank_donor_obs = sorted_data_donor[sorted_data_donor == value_donor].index[0]
         total_obs_donor = len(sorted_data_donor)
         cumul_prob_donor_obs = (rank_donor_obs + 1) / total_obs_donor
 
