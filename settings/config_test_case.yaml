@@ -1,10 +1,10 @@
-# Configuration file for SWE data driven seasonal data driven forecasting
+# Configuration file for data-driven forecasting
 # Set required data paths - these are relative paths to where this script is stored
 
 # Domain, note that the name needs to match the data paths that follow
 domain: "05BB001"
 
-#Observational data path
+# Observational data path
 streamflow_obs_path: "../test_case_data/input_data/Qobs_1979_2021_testcases.nc"
 precip_obs_path: "../test_case_data/input_data/SCDNA_v1.1_testcases.nc"
 SWE_obs_path: "../test_case_data/input_data/SWE_1979_2022_testcases.nc"

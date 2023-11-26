@@ -1,15 +1,15 @@
-# FROST BYTE: Forecasting River Outlooks from Snow Timeseries: Building Yearly Targeted Ensembles
+# FROSTBYTE: Forecasting River Outlooks from Snow Timeseries: Building Yearly Targeted Ensembles
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/lou-a/FROST-BYTE/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/lou-a/FROSTBYTE/pulls)
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40ArnalLouise)](https://twitter.com/ArnalLouise)
 
 
 
 
-FROST BYTE is a reproducible data-driven workflow for probabilistic seasonal streamflow forecasting, based on streamflow and snow water equivalent station observations.
+FROSTBYTE is a reproducible data-driven workflow for probabilistic seasonal streamflow forecasting, based on streamflow and snow water equivalent station observations.
 
 <p align="center">
-<img src="FROST BYTE logo.png" alt="FROST BYTE logo" width="200"/>
+<img src="FROSTBYTE logo.png" alt="FROSTBYTE logo" width="200"/>
 </p>
 
 ## Description
@@ -31,7 +31,7 @@ The steps below will help you to have a fully set-up environment to explore and 
 
     Begin by cloning the repository to your local machine. Use the command below in your terminal or command prompt:
    ```bash
-   git clone https://github.com/lou-a/FROST-BYTE.git
+   git clone https://github.com/lou-a/FROSTBYTE.git
    ```
     This command will create a copy of the repository in your current directory.
 2. **Set Up Virtual Environment (Optional)**  
