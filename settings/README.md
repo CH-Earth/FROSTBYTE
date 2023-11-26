@@ -1,6 +1,6 @@
-# FROST-BYTE Settings
+# FROSTBYTE Settings
 
-The settings for running the data driven forecasting workflow are located in this directory.
+The settings for running the data-driven forecasting workflow are located in this directory.
 
 ## Instructions
 
