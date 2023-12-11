@@ -1,6 +1,6 @@
 # FROSTBYTE: Forecasting River Outlooks from Snow Timeseries: Building Yearly Targeted Ensembles
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/lou-a/FROSTBYTE/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/CH-Earth/FROSTBYTE/pulls)
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40ArnalLouise)](https://twitter.com/ArnalLouise)
 
 
@@ -14,7 +14,7 @@ FROSTBYTE is a reproducible data-driven workflow for probabilistic seasonal stre
 
 ## Description
 
-This repository contains a reproducible data-driven workflow, organized as a collection of Jupyter Notebooks. The workflow leverages snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
+This repository contains a reproducible data-driven workflow, organized as a collection of Jupyter Notebooks. The workflow leverages snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. (manuscript in preparation for submission to HESS) to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
 
 ## Repository Structure
 
@@ -94,8 +94,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) fi
 
 ## Citation
 
-If you use this workflow or any data therein, please consider citing our paper. The citation details can be found in the `CITATION.md` file.
-To be added ...
+If you use this workflow, please consider citing it using the `Cite this repository` button.
 
 ## Contact
 
