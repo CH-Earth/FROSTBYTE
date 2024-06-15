@@ -2,7 +2,7 @@
 
 To explore FROSTBYTE, the best way is to navigate the Jupyter Notebooks in this section! The image below shows the methods implemented in each notebook. Following that is a brief text description, but open the notebooks themselves to see all steps your yourself.
 
-For installation instructions, refer back to the [landing page](https://github.com/lou-a/FROSTBYTE). Test data has been included for a sample catchment in Canada and in the USA.
+For installation instructions, refer back to the [landing page](https://github.com/CH-Earth/FROSTBYTE). Test data has been included for a sample catchment in Canada and in the USA.
 
 
 <p align="center">

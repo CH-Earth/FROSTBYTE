@@ -14,7 +14,7 @@ FROSTBYTE is a reproducible data-driven workflow for probabilistic seasonal stre
 
 ## Description
 
-This repository contains a reproducible data-driven workflow, organized as a collection of Jupyter Notebooks. The workflow leverages snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. (manuscript in preparation for submission to HESS) to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
+This repository contains a reproducible data-driven workflow, organized as a collection of Jupyter Notebooks. The workflow leverages snow water equivalent (SWE) measurements as predictors and streamflow observations as predictands, drawn from reliable datasets like CanSWE, NRCS, SNOTEL, HYDAT, and USGS. Gap filling for SWE datasets is done using quantile mapping from nearby stations and Principal Component Analysis is used to identify independent predictor components. These components are employed in a regression model to generate ensemble hindcasts of seasonal streamflow volumes. This workflow was applied by Arnal et al. (2024) to 75 river basins with a nival (i.e., snowmelt-driven) regime and with minimal regulation across Canada and the USA, for generating hindcasts from 1979 to 2021. This study presented a user-oriented hindcast evaluation, offering valuable insights for snow surveyors, forecasters, workflow developers, and decision-makers.
 
 ## Repository Structure
 
@@ -31,7 +31,7 @@ The steps below will help you to have a fully set-up environment to explore and 
 
     Begin by cloning the repository to your local machine. Use the command below in your terminal or command prompt:
    ```bash
-   git clone https://github.com/lou-a/FROSTBYTE.git
+   git clone https://github.com/CH-Earth/FROSTBYTE.git
    ```
     This command will create a copy of the repository in your current directory.
 2. **Set Up Virtual Environment (Optional)**  
@@ -95,6 +95,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) fi
 ## Citation
 
 If you use this workflow, please consider citing it using the `Cite this repository` button.
+
+Arnal, L., Clark, M. P., Pietroniro, A., Vionnet, V., Casson, D. R., Whitfield, P. H., Fortin, V., Wood, A. W., Knoben, W. J. M., Newton, B. W., and Walford, C.: FROSTBYTE: A reproducible data-driven workflow for probabilistic seasonal streamflow forecasting in snow-fed river basins across North America, EGUsphere [preprint], https://doi.org/10.5194/egusphere-2023-3040, 2024.
 
 ## Contact
 
