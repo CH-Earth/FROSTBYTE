@@ -4,6 +4,7 @@
 ############################################################################################################
 
 # Import required modules
+import CRPS.CRPS as CRPSscore
 import datetime
 from datetime import timedelta, date
 import geopandas as gpd
@@ -318,7 +319,7 @@ def continuous_rank_prob_score(Qobs, Qfc_ens, min_obs):
     CRPS range: 0 to +Inf. Perfect score: 0. Units: Same as variable measured.
     CRPSS range: -Inf to 1. Perfect score: 1. Units: Unitless.
     Characteristics: It is equivalent to the mean absolute error (MAE) for deterministic forecasts.
-    For more info, see the Python CRPS package documentation: https://pypi.org/project/properscoring/
+    For more info, see the relevant Python CRPS package documentation: https://pypi.org/project/properscoring/, https://pypi.org/project/CRPS/
 
     Keyword arguments:
     ------------------
@@ -328,8 +329,8 @@ def continuous_rank_prob_score(Qobs, Qfc_ens, min_obs):
 
     Returns:
     --------
-    - CRPS: Float of the CRPS value between the ensemble forecasts & observations.
     - CRPSS: Float of the CRPSS value between the ensemble forecasts & observations.
+    - fairCRPSS: Float of the fairCRPSS value between the ensemble forecasts & observations.
 
     """
 
@@ -344,11 +345,23 @@ def continuous_rank_prob_score(Qobs, Qfc_ens, min_obs):
         CRPS_baseline = ps.crps_ensemble(Qobs, baseline).mean()
         CRPSS = 1 - CRPS / CRPS_baseline
 
+        # Calculate the fairCRPS and fairCRPSS
+        fairCRPS = []
+        fairCRPS_baseline = []
+        for y in range(len(Qobs)):
+            fcrps = CRPSscore(Qfc_ens[y,:].values, Qobs[y].values).compute()[1]
+            fcrps_baseline = CRPSscore(baseline[y,:][~np.isnan(baseline[y,:])].tolist(), Qobs[y].values).compute()[1]
+            fairCRPS.append(fcrps)
+            fairCRPS_baseline.append(fcrps_baseline)
+        fairCRPS = np.mean(fcrps)
+        fairCRPS_baseline = np.mean(fairCRPS_baseline)
+        fairCRPSS = 1 - fairCRPS / fairCRPS_baseline
+
     else:
 
-        CRPS, CRPSS = np.nan, np.nan
+        CRPSS, fairCRPSS = np.nan, np.nan
 
-    return CRPS, CRPSS
+    return CRPSS, fairCRPSS
 
 ###
 
@@ -1282,7 +1295,7 @@ def principal_component_analysis(stations_data, flag):
 
 def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, perc_event_high, min_obs, bins_thresholds):
 
-    """Calculates deterministic metrics for whole hindcast timeseries (1 value per hindcast start date & target period).
+    """Calculates probabilistic metrics for whole hindcast timeseries (1 value per hindcast start date & target period).
 
     Keyword arguments:
     ------------------
@@ -1297,8 +1310,8 @@ def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, p
 
     Returns:
     --------
-    - crps_da: xarray DataArray containing the CRPS for each hindcast start date & target period.
     - crpss_da: xarray DataArray containing the CRPSS for each hindcast start date & target period.
+    - fair_crpss_da: xarray DataArray containing the fairCRPSS for each hindcast start date & target period.
     - reli_da: xarray DataArray containing the reliability index for each hindcast start date & target period.
     - roc_auc_da: xarray DataArray containing the ROC area under the curve for each hindcast start date & target period.
     - roc_da: xarray DataArray containing the ROC curves for each hindcast start date & target period.
@@ -1312,11 +1325,13 @@ def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, p
     # Initialize the verification metrics' Numpy arrays
     if flag == 0:
         crpss_array = np.ones((len(initdates),len(targetperiods))) * np.nan
+        fair_crpss_array = np.ones((len(initdates),len(targetperiods))) * np.nan
         reli_array = np.ones((len(initdates),len(targetperiods))) * np.nan
         roc_auc_array = np.ones((len(initdates),len(targetperiods),2)) * np.nan
         roc_array = np.ones((len(initdates),len(targetperiods),2,11,2)) * np.nan
     elif flag == 1:
         crpss_array = np.ones((len(initdates),len(targetperiods),niterations)) * np.nan
+        fair_crpss_array = np.ones((len(initdates),len(targetperiods),niterations)) * np.nan
         reli_array = np.ones((len(initdates),len(targetperiods),niterations)) * np.nan
         roc_auc_array = np.ones((len(initdates),len(targetperiods),niterations,2)) * np.nan
         roc_array = np.ones((len(initdates),len(targetperiods),niterations,2,11,2)) * np.nan
@@ -1351,7 +1366,8 @@ def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, p
                 if flag == 0:
                     # CRPS & CRPSS
                     crps_outputs = continuous_rank_prob_score(Qobs_data, Qfc_ens_data, min_obs)
-                    crpss_array[row,column] = round(crps_outputs[1],2)
+                    crpss_array[row,column] = round(crps_outputs[0],2)
+                    fair_crpss_array[row,column] = round(crps_outputs[1],2)
                     # Reliability index
                     reli_array[row,column] = round(reli_index(Qobs_data, Qfc_ens_data, min_obs),2)
                     # ROC
@@ -1373,7 +1389,8 @@ def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, p
 
                         # CRPS & CRPSS
                         crps_outputs = continuous_rank_prob_score(Qobs_data_bs, Qfc_ens_data_bs, min_obs)
-                        crpss_array[row,column,b] = round(crps_outputs[1],2)
+                        crpss_array[row,column,b] = round(crps_outputs[0],2)
+                        fair_crpss_array[row,column,b] = round(crps_outputs[1],2)
                         # Reliability index
                         reli_array[row,column,b] = round(reli_index(Qobs_data_bs, Qfc_ens_data_bs, min_obs),2)
                         # ROC
@@ -1386,25 +1403,29 @@ def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, p
 
     # Save values to xarray DataArrays
     if flag == 0:
-        crpss_da = xr.DataArray(data=crpss_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods]}, dims=['init_month','target_period'], name='CRPSS')
-        reli_da = xr.DataArray(data=reli_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods]}, dims=['init_month','target_period'], name='Reliability_index')
+        crpss_da = xr.DataArray(data=crpss_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods]}, dims=['init_date','target_period'], name='CRPSS')
+        fair_crpss_da = xr.DataArray(data=fair_crpss_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods]}, dims=['init_date','target_period'], name='fairCRPSS')
+        reli_da = xr.DataArray(data=reli_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods]}, dims=['init_date','target_period'], name='Reliability_index')
         roc_auc_da = xr.DataArray(data=roc_auc_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'event':[perc_event_low, perc_event_high]}, dims=['init_date','target_period','event'], name='ROC_AUC')
-        roc_da = xr.DataArray(data=roc_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'rate':['FAR','HR'],'bins':roc_outputs_high[0].bins,'event':[perc_event_low, perc_event_high]}, dims=['init_month','target_period','rate','bins','event'], name='ROC')
+        roc_da = xr.DataArray(data=roc_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'rate':['FAR','HR'],'bins':roc_outputs_high[0].bins,'event':[perc_event_low, perc_event_high]}, dims=['init_date','target_period','rate','bins','event'], name='ROC')
 
     elif flag == 1:
         crpss_da = xr.DataArray(data=crpss_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'iteration':np.arange(1,niterations+1)}, dims=['init_date','target_period','iteration'], name='CRPSS')
+        fair_crpss_da = xr.DataArray(data=fair_crpss_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'iteration':np.arange(1,niterations+1)}, dims=['init_date','target_period','iteration'], name='fairCRPSS')
         reli_da = xr.DataArray(data=reli_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'iteration':np.arange(1,niterations+1)}, dims=['init_date','target_period','iteration'], name='Reliability_index')
         roc_auc_da = xr.DataArray(data=roc_auc_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'iteration':np.arange(1,niterations+1),'event':[perc_event_low, perc_event_high]}, dims=['init_date','target_period','iteration','event'], name='ROC_AUC')
         roc_da = xr.DataArray(data=roc_array, coords={'init_date':initdates,'target_period':[x[4::] for x in targetperiods],'iteration':np.arange(1,niterations+1),'rate':['FAR','HR'],'bins':roc_outputs_high[0].bins,'event':[perc_event_low, perc_event_high]}, dims=['init_date','target_period','iteration','rate','bins','event'], name='ROC')
 
 
     # Information for the output xarray DataArrays
-    da_dict = {'CRPSS':crpss_da,'reli':reli_da,'ROC_AUC':roc_auc_da,'ROC':roc_da}
+    da_dict = {'CRPSS':crpss_da,'fairCRPSS':fair_crpss_da,'reli':reli_da,'ROC_AUC':roc_auc_da,'ROC':roc_da}
     metrics_longnames_dict = {'CRPSS':'Continuous Rank Probability Skill Score',
+                              'fairCRPSS':'Fair Continuous Rank Probability Skill Score',
                               'reli':'Reliability index',
                               'ROC_AUC':'Relative Operating Characteristic (ROC) area under the curve (AUC)',
                               'ROC':'Relative Operating Characteristic (ROC)'}
     metrics_info_dict = {'CRPSS':'Measures the skill of the hindcast against a baseline (observations climatology). Range: -Inf to 1. Perfect score: 1. Units: Unitless.',
+                         'fairCRPSS':'Measures the skill of the hindcast against a baseline (observations climatology), using a fair method to account for differences in ensemble sizes. Range: -Inf to 1. Perfect score: 1. Units: Unitless.',
                          'reli':'Measures the closeness between the empirical CDF of the ensemble hindcast with the CDF of a uniform distribution (i.e., flat rank histogram). Range: 0 to 1. Perfect score: 1. Units: Unitless.',
                          'ROC_AUC':'Measures the ensemble hindcast resolution, its ability to discriminate between events (given percentile) & non-events. ROC AUC range: 0 to 1,. Perfect score: 1. No skill: 0.5. Units: Unitless.',
                          'ROC':'Measures the ensemble hindcast resolution, its ability to discriminate between events (given percentile) & non-events. The ROC curve plots the hit rate (HR) vs the false alarm rate (FAR) using a set of increasing probability thresholds (i.e., 0.1, 0.2, ..., 1) to make the yes/no decision.'}
@@ -1430,7 +1451,7 @@ def prob_metrics_calculation(Qobs, Qfc_ens, flag, niterations, perc_event_low, p
             da_dict[keys].bins.attrs['info'] = 'Forecast probability thresholds used for the ROC calculations.'
             da_dict[keys].rate.attrs['info'] = 'The false alarm rate (FAR) captures when an event is forecast to occur, but did not occur. The hite rate (HR) captures when an event is forecast to occur, and did occur.'
 
-    return crpss_da, reli_da, roc_auc_da, roc_da
+    return crpss_da, fair_crpss_da, reli_da, roc_auc_da, roc_da
 
 ###
 

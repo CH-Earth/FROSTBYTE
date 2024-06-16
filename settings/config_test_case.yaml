@@ -1,7 +1,7 @@
 # Configuration file for data-driven forecasting
 # Set required data paths - these are relative paths to where this script is stored
 
-# Domain, note that the name needs to match the data paths that follow
+# Domain, note that the name needs to match the data paths that follow - current options are: "05BB001" for the Bow River at Banff in Alberta, Canada, or "09081600" for the Crystal River Above Avalanche Creek, Near Redstone in Colorado, USA
 domain: "05BB001"
 
 # Observational data path
